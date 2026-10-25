@@ -27,14 +27,15 @@ test('CI uses the patched runtime and executes these regression tests', () => {
   assert.match(workflow, /run: node --test Docker\/scripts\/node-runtime\.test\.cjs/);
 });
 
-test('image publishing uses the fork GHCR credentials and both architectures', () => {
+test('image publishing uses the fork GHCR credentials and only the VPS architecture', () => {
   const workflow = read('.github/workflows/publish_docker_image.yml');
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /registry: ghcr\.io/);
   assert.match(workflow, /password: \$\{\{ secrets\.GITHUB_TOKEN \}\}/);
   assert.match(workflow, /images: ghcr\.io\/\$\{\{ github\.repository \}\}/);
-  assert.equal([...workflow.matchAll(/platforms: linux\/amd64,linux\/arm64/g)].length, 2);
+  assert.equal([...workflow.matchAll(/^          platforms: linux\/amd64\r?$/gm)].length, 2);
   assert.match(workflow, /EVOLUTION_IMAGE=ghcr\.io\/\$\{\{ github\.repository \}\}@\$\{\{ steps\.api\.outputs\.digest \}\}/);
+  assert.match(workflow, /--platform linux\/amd64 --entrypoint node/);
   assert.match(workflow, /node-runtime-smoke\.cjs/);
-  assert.doesNotMatch(workflow, /DOCKER_USERNAME|DOCKER_PASSWORD|evoapicloud/);
+  assert.doesNotMatch(workflow, /DOCKER_USERNAME|DOCKER_PASSWORD|evoapicloud|arm64|setup-qemu/);
 });

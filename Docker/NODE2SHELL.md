@@ -15,10 +15,11 @@ multi-platform image digest. The API remains at version 2.3.7.
 - [x] Add regression tests and configure CI to execute them with patched Node.
 - [x] Build both linux/amd64 images and verify Node 24.22.1 inside each image.
 - [x] Validate the application build, Brotli and native sharp compatibility.
-- [x] Configure GHCR publishing for linux/amd64 and linux/arm64 in the fork.
+- [x] Configure GHCR publishing for linux/amd64, matching the owner's VPS.
 - [x] Validate the publishing workflow with actionlint.
 - [x] Complete independent final review of the CI changes (no defects found).
-- [ ] Owner pushes the commit; execute and verify the workflow on GitHub.
+- [x] Execute the workflow on GitHub (run 40162767210 built and published both images).
+- [ ] Revalidate GitHub execution after removing the unneeded ARM64 build and check.
 - [ ] Owner deploys the verified image on the VPS.
 
 ## Build on GitHub
@@ -34,15 +35,23 @@ It runs on pushes to `main` (`latest`), `develop` (`homolog`) and version tags
 be started manually from Actions: **Publish fork container images**.
 
 Authentication uses `GITHUB_TOKEN` with `packages: write`; no Docker Hub secrets
-are required. Both packages include linux/amd64 and linux/arm64. The metrics
+are required. Both packages target linux/amd64, matching the VPS. The metrics
 build inherits the exact API manifest digest from the same run. Runtime smoke
-checks execute for both published images on both architectures. Final digests
+checks execute for both published AMD64 images. Final digests
 are recorded in the workflow summary.
 
-The local workflow has passed actionlint and regression tests, but has not yet
-run on GitHub: the owner must push the commit first. No git push is performed
-by the agent. Local amd64 builds have passed TypeScript compilation and smoke
-checks; ARM64 execution will be verified by the GitHub workflow.
+Run https://github.com/vision-digital/evolution-api/actions/runs/40162767210
+built and published both architectures for both images. Both AMD64 smoke
+checks passed. ARM64 verification stopped during Docker pull with
+`cannot overwrite digest`: the runner's classic image store could not bind
+the same multiarch index digest to the second architecture.
+
+The owner confirmed the VPS is AMD64 and ARM64 support is unnecessary. The
+workflow now builds and validates only linux/amd64 and no longer installs
+QEMU. Both API and metrics retain the full Node/Brotli/sharp smoke checks.
+The regression prevents ARM64 builds from being reintroduced into this
+VPS workflow. The owner must push this correction before GitHub can execute
+the corrected workflow. No git push is performed by the agent.
 
 ## Build locally
 
@@ -76,8 +85,8 @@ docker run --rm --entrypoint node "$EVOLUTION_API_IMAGE" --version
 ```
 
 Replace the placeholder before executing. The runtime must report `v24.22.1`.
-Use the metrics package digest instead when metrics are wanted. Docker selects
-the host architecture from the published multi-platform manifest.
+Use the metrics package digest instead when metrics are wanted. These images
+target an AMD64 VPS.
 
 GHCR packages are private when first published. The owner can make them public
 in package settings for anonymous pulls, or authenticate the VPS with a PAT
