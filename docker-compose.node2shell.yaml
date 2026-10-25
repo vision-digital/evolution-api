@@ -1,0 +1,4 @@
+# Apply after docker-compose.yaml on the VPS to use the fork's patched API.
+services:
+  api:
+    image: ${EVOLUTION_API_IMAGE:-ghcr.io/vision-digital/evolution-api:latest}

@@ -19,7 +19,10 @@ jobs:
     - name: Install Node
       uses: actions/setup-node@v5
       with:
-        node-version: 20.x
+        node-version: 24.22.1
+
+    - name: Check Node runtime regression
+      run: node --test Docker/scripts/node-runtime.test.cjs
 
     - name: Cache node modules
       uses: actions/cache@v4

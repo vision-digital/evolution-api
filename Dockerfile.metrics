@@ -1,19 +1,6 @@
-FROM evoapicloud/evolution-api:latest AS base
-WORKDIR /evolution
+ARG EVOLUTION_IMAGE=vision-digital/evolution-api:2.3.7-node24.22.1
+FROM ${EVOLUTION_IMAGE}
 
-# Copiamos apenas o necessário para recompilar o dist com as mudanças locais
-COPY tsconfig.json tsup.config.ts package.json ./
-COPY src ./src
-
-# Recompila usando os node_modules já presentes na imagem base
-RUN npm run build
-
-# Runtime final: reaproveita a imagem oficial e apenas sobrepõe o dist
-FROM evoapicloud/evolution-api:latest AS final
-WORKDIR /evolution
-COPY --from=base /evolution/dist ./dist
-
+# Build the API image from this checkout before building this variant.
 ENV PROMETHEUS_METRICS=true
-
-# Entrada original da imagem oficial já sobe o app em /evolution
 
